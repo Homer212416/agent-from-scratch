@@ -1,6 +1,9 @@
 # Python-generated files
 __pycache__/
-*.py[oc]
+*.pyc
+*.pyo
+*.pyd
+.Python
 build/
 dist/
 wheels/
@@ -9,3 +12,18 @@ wheels/
 # Virtual environments
 .venv
 .env
+.python-version
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Claude Code
+.claude/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
