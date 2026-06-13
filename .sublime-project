@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "LSP": {
+            "LSP-pyright": {
+                "enabled": true,
+                "settings": {
+                    "python.pythonPath": "/Users/user/MyProjects/agent-memory/.venv/bin/python"
+                }
+            }
+        }
+    }
+}
