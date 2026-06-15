@@ -1,8 +1,11 @@
+from typing import Optional, Callable
 
 class ConversationMemory:
-    def __init__(self, max_tokens: int = 2000):
+    def __init__(self, max_tokens: int = 2000, summarizer: Optional[Callable] = None):
         self.messages = []
+        self.summary = ""
         self.max_tokens = max_tokens
+        self.summarizer = summarizer
 
     def _count_tokens(self, content:str) -> int:
         return len(content)//4
@@ -12,20 +15,38 @@ class ConversationMemory:
 
     def add_message(self, role: str, content: str) -> None:
         self.messages.append({"role": role, "content": content})
-        self._enforce_limit()
+        if self._total_tokens() > self.max_tokens * 0.8:
+            self._compress()
 
-    def _enforce_limit(self) -> None:
-        while self._total_tokens() > self.max_tokens and len(self.messages) >= 2:
-            self.messages.pop(0)
-            self.messages.pop(0)
+    def _compress(self) -> None:
+        print("! The agent will compress its memory.")
+        # Keep the last 2 messages (1 pairs), summarize the rest
+        to_summarize = self.messages[:-2]
+        self.messages = self.messages[-2:]
 
-    def get_context(self) -> str:
-        return "\n".join(
-            f"{msg['role']}: {msg['content']}" for msg in self.messages
-        )
+        if not to_summarize:
+            return
+
+        if self.summarizer:
+            new_summary = self.summarizer(to_summarize, self.summary)
+        else:
+            # stub when there is no summarizer
+            new_summary = f"[Summary of {len(to_summarize)} messages]"
+
+        self.summary = new_summary
+
+        print(f"! [Full Summary]: {self.summary}\n")
+
+    def get_context(self) -> list:
+        result = []
+        if self.summary:
+            result.append({"role": "system", "content": f"Summary of earlier conversation:\n{self.summary}"})
+        result.extend(self.messages)
+        return result
 
     def clear(self) -> None:
         self.messages = []
+        self.summary = ""
 
 if __name__ == "__main__":
     mem = ConversationMemory(max_tokens=50)
