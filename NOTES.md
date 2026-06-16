@@ -121,6 +121,8 @@ A: Can we use a self prompt to trigger retrieval. For example, when the user ask
 But you're right to simplify for today. The problem with "only personal domain" is: how does the code know it's a personal question? That judgment requires another LLM call or a classifier — too complex for v0.
 Pick the simplest trigger: every turn. Always retrieve, always prepend. You'll feel the redundancy during the stress test, and that feeling will tell you why smarter triggering matters.)
 
+(You arrived at this idea unprompted, which is notable. Right now in the industry, when to retrieve is one of the hottest architectural questions — most production systems are moving from "always retrieve" to "retrieve when needed." You named the pattern before being taught it. Put a flag in NOTES.md for this — it might become a Project 2 angle, or a follow-up article.)
+
 Q3: How many results do you return? Top 1? Top 3? Top 5? Why?
 A: Top 3. Top 1 can be not precise. Top 3 has some redundant but top 5 is too redundant.
 
@@ -158,5 +160,6 @@ A: Yes. Semantic embeddings ensure semantic retrievals.
 Q4: Did retrieval interact strangely with the summary? Any redundancy?
 A: Yes. There are redundacies between retrievals and summary, but the model handle them well in my tests.
 (The better question is: what's the cost of adding embeddings? You need a model to generate them, storage to keep them, and a similarity search library. Is that complexity worth it for your use case? That's the real architectural tension.)
+
 Q5: What's the next architectural question this opens up?
 A: Is it necessary to have a semantic retrieval?
