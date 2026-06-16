@@ -98,6 +98,65 @@ I choose to keep the last one pair of messages.)
 
 ### evaluation
 
-Good — the plumbing works. Now note what it got right and wrong:
-Got right: User identity (your name), assigned task — high importance facts survived.
-Got wrong: Assistant's name got washed out.
+- 1. What did the summary get right? What did it miss?
+It gets all the important info right and miss the details of average conversations.
+- 2. Did summary-of-summary degradation appear?
+Yes, over time, summary-of-summary lost details.
+- 3. Did important facts (identity, tasks) survive summarization over time?
+Yes. They survive my test of multiple turns.
+- 4. Does a separate persistent-facts store feel necessary now?
+Not yet. I think it would be needed when there is a new session.
+
+## -- day 4 --
+
+### design
+
+Q1: What goes into the retrieval store? All messages? Only user messages? Only summarized chunks? Pick one and say why.
+A: user messages. To store all messages would make the database too bloated over time, but user messages usually contain important info from the users. And the model can regenerate the answer based on the user prompt. Summarized chunks are not necessary in this case since there is no tool calling or web-search. Everything is either generated or input by the user.
+(assistant messages sometimes contain important info too — like if the agent confirmed a plan, gave a specific recommendation, or the user said "yes, do that." But user messages as the primary store is a reasonable v0 choice.)
+
+Q2: What triggers retrieval? Every turn? Only when the user asks something? Pick one and why.
+A: Can we use a self prompt to trigger retrieval. For example, when the user asked something not in the context. The model would generate a self prompt to start retrival. But to be simple, the agent always trigger retrieval when the user asks something about the personal domain. For example, the user's preference. In the other hand, no retrieval for public domain or common sense.
+(self-prompting to trigger retrieval — is actually a real technique called agentic RAG or retrieval on demand. The model decides when it needs to retrieve. That's a more advanced pattern worth writing in NOTES.md as a future idea.
+But you're right to simplify for today. The problem with "only personal domain" is: how does the code know it's a personal question? That judgment requires another LLM call or a classifier — too complex for v0.
+Pick the simplest trigger: every turn. Always retrieve, always prepend. You'll feel the redundancy during the stress test, and that feeling will tell you why smarter triggering matters.)
+
+Q3: How many results do you return? Top 1? Top 3? Top 5? Why?
+A: Top 3. Top 1 can be not precise. Top 3 has some redundant but top 5 is too redundant.
+
+Q4: Where in the final prompt does retrieved content go? Same place as the summary, or a different section labeled differently?
+A: Same place as the summary. Since we do retrieval every time and the retrieval already contain the use info. Summary is not necessary any more. 
+(push back on yourself a little. Retrieval only returns what's relevant to the current query. Summary captures everything important regardless of what's being asked right now.
+They serve different purposes:
+Summary — persistent background context, always present
+Retrieval — query-specific context, pulled on demand
+For today keep both, but put them in different labeled sections.)
+
+Q5: If retrieval pulls back a message from 50 turns ago — but that message has been summarized and evicted — what happens? Do you store the original even after eviction, or only what's still in the window?
+A: Store the original after eviction. We do eviction because the context window is very limit, but the vector DB can be much bigger, it can store long term memory.
+
+- Observation:
+"dog" and "pet" have zero word overlap so score = 0, nothing retrieved. The retrieval store has "my dog's name is Pickle" but the query "do I have a pet" shares no meaningful words with it.
+This is precisely why semantic embeddings exist. In vector space:
+
+"dog" and "pet" are close neighbors
+"Pickle" and "dog name" are related concepts
+
+Keyword matching only sees surface form. Embeddings capture meaning.
+
+### evaluation
+Q1: When did keyword retrieval work well?
+A: When the keywords in documents and query are exactly the same.
+
+Q2: When did it fail? Be specific about why it failed in each case.
+A: It fails there is none same keywords between documents and queries. For example, I told the agent about my dog. When I asked about my pet, it didn't retrieve anything.
+
+Q3: What does this tell you about why semantic embeddings exist?
+A: Yes. Semantic embeddings ensure semantic retrievals.
+(The deeper point is: embeddings map words to points in vector space where meaning determines distance, not spelling. "Dog" and "pet" end up close together because they appear in similar contexts across millions of documents. )
+
+Q4: Did retrieval interact strangely with the summary? Any redundancy?
+A: Yes. There are redundacies between retrievals and summary, but the model handle them well in my tests.
+(The better question is: what's the cost of adding embeddings? You need a model to generate them, storage to keep them, and a similarity search library. Is that complexity worth it for your use case? That's the real architectural tension.)
+Q5: What's the next architectural question this opens up?
+A: Is it necessary to have a semantic retrieval?

@@ -3,6 +3,7 @@ import os
 from zhipuai import ZhipuAI
 from memory import ConversationMemory
 from dotenv import load_dotenv
+from retrieval import RetrievalStore
 
 load_dotenv()
 
@@ -44,6 +45,7 @@ New conversation to summarize:
     return response.choices[0].message.content
 
 memory = ConversationMemory(max_tokens=1000,summarizer=summerizer)
+store = RetrievalStore()
 
 while True:
     user_input = input("You: ")
@@ -55,14 +57,29 @@ while True:
         continue
     
     memory.add_message("user", user_input)
+
+    # Retrieve relevant context
+    retrieved = store.search(user_input, top_k=3)
+
+    # Add to store
+    store.add(user_input)
+
+    context = memory.get_context()
+    if retrieved:
+        context.insert(1, {
+            "role": "system",
+            "content": "Possibly relevant earlier context:\n" + "\n".join(f"- {r}" for r in retrieved)
+        })
+
     
     response = client.chat.completions.create(
         model="glm-5",
-        messages=memory.get_context()
+        messages=context 
     )
     
     assistant_reply = response.choices[0].message.content
     memory.add_message("assistant", assistant_reply)
     
+    print(f"[Retrieved]: {retrieved}\n")
     print(f"Assistant: {assistant_reply}\n")
     print(f"[Context length]: {sum(len(mem["content"]) for mem in memory.get_context())} chars\n")
