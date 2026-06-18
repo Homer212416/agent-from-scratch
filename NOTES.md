@@ -163,3 +163,52 @@ A: Yes. There are redundacies between retrievals and summary, but the model hand
 
 Q5: What's the next architectural question this opens up?
 A: Is it necessary to have a semantic retrieval?
+
+## -- day 5 --
+
+### design
+Q1: Which embedding model? Local (sentence-transformers with all-MiniLM-L6-v2) or API (OpenAI/DeepSeek embeddings)? Pick one and say why.
+A: API is fine. I don't think my device is suitable to run a model locally. 
+(all-MiniLM-L6-v2 is only 22 million parameters — tiny by today's standards. It runs on CPU without any GPU needed, and even old hardware handles it.)
+
+Q2: What similarity metric? Cosine similarity is standard — use it. Note why cosine and not Euclidean.
+A: Cosine is the standard way to calculate the similarity between vectors. Euclidean is good for the distance between dots but not for vectors.
+(Euclidean distance — straight-line distance between two points. Sensitive to magnitude (how "long" the vector is).
+Cosine similarity — measures the angle between two vectors, ignoring their length entirely.
+Why does this matter for embeddings? Two sentences can point in the same semantic direction but have different magnitudes (one embedding vector might just be "longer" due to sentence length or model quirks). Cosine only cares about direction — are they pointing the same way in meaning-space — not how long the vectors are.)
+
+Q3: Do you embed on add() or only at search time? Pick one and say why.
+A: We need to embed on add(). So the documents only are embeded once rather than embeded every time there is a search.
+
+Q4: What happens to old embeddings if you re-embed with a different model later?
+A: We have to redo the embedding again since different models generate different embeddings.
+(Model A's "dog" vector and Model B's "dog" vector live in completely different, incompatible spaces — comparing them with cosine similarity would give meaningless numbers.)
+
+### evaluation
+
+Q1: the core thesis of today: does "pet" find "dog" now?
+A: Yes. (That's the moment. Keyword matching failed on this exact case yesterday — zero overlap between "pet" and "dog". Today, semantic embeddings found it because "pet" and "dog" live close together in meaning-space.)
+
+Q2: Comparison.
+A: Keyword retrieval failed every single time after the exact-match case — "animal", "pet", "they in the house" all returned empty. Semantic retrieval caught all of them, even pulling in relevant context for "they" referring to wife and dog together.
+
+Q3: Irrelevant query.
+A: Semantic still returned the dog-related documents even though they're completely irrelevant to Python's GIL. It can't say "nothing matches" — it always returns the top-k closest by cosine similarity, even when the closest thing is still far away. That's an important limitation to note: semantic retrieval has no built-in relevance threshold, it just returns "closest of what exists," which could be junk if nothing is actually close.
+
+Q: Concrete examples where semantic beat keyword
+A: If 'dog' is stored but 'pet' is queried, semantic beat keyword with no doubts.
+
+Q: Concrete examples where they returned the same thing
+A: When keyword is in the query. For example, 'dog' is queried.
+
+Q: Did semantic ever return something weird/irrelevant?
+A: Yes!
+(when you asked about Python's GIL, semantic retrieval still returned the dog-related documents because it always returns top-k by similarity, even when nothing is actually relevant. There's no "I don't know" option built in — it forces a match. That's the real lesson here, write it down explicitly.)
+
+Q: Latency cost — try timing a search() call if you want a number
+A: Very fast. Much faster than LLM response.
+(Search took: 0.0130s)
+
+Q: The real question — is semantic retrieval worth the complexity for your use case? Argue both sides.
+A: Yes, it can retrieve info with vague meaning.
+   No, a model is needed and naive solution can retrieve in a lot of senarios and doesn't need a model.

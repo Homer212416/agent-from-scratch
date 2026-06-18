@@ -4,6 +4,7 @@ from zhipuai import ZhipuAI
 from memory import ConversationMemory
 from dotenv import load_dotenv
 from retrieval import RetrievalStore
+from retrieval import SemanticRetrievalStore
 
 load_dotenv()
 
@@ -47,6 +48,8 @@ New conversation to summarize:
 memory = ConversationMemory(max_tokens=1000,summarizer=summerizer)
 store = RetrievalStore()
 
+semantic_store = SemanticRetrievalStore()
+
 while True:
     user_input = input("You: ")
     
@@ -61,17 +64,28 @@ while True:
     # Retrieve relevant context
     retrieved = store.search(user_input, top_k=3)
 
+    semantic_retrieved = semantic_store.search(user_input, top_k=3)
+
     # Add to store
     store.add(user_input)
 
+    semantic_store.add(user_input)
+
     context = memory.get_context()
-    if retrieved:
+        
+    print("------------ Naive Retrieval -------------")
+    print(f"[Retrieved]: {retrieved}\n")
+    print("------------------------------------------")
+    print("----------- Semantic Retrieval -----------")
+    print(f"[Semantic Retrieved]: {semantic_retrieved}\n")
+    print("------------------------------------------") 
+
+    if semantic_retrieved:
         context.insert(1, {
             "role": "system",
-            "content": "Possibly relevant earlier context:\n" + "\n".join(f"- {r}" for r in retrieved)
+            "content": "Possibly relevant earlier context:\n" + "\n".join(f"- {r}" for r in semantic_retrieved)
         })
 
-    
     response = client.chat.completions.create(
         model="glm-5",
         messages=context 
@@ -79,7 +93,10 @@ while True:
     
     assistant_reply = response.choices[0].message.content
     memory.add_message("assistant", assistant_reply)
-    
-    print(f"[Retrieved]: {retrieved}\n")
+
+    print()
+    print("------------ Reply -------------")
     print(f"Assistant: {assistant_reply}\n")
-    print(f"[Context length]: {sum(len(mem["content"]) for mem in memory.get_context())} chars\n")
+    print(f"[Context length]: {sum(len(mem['content']) for mem in memory.get_context())} chars\n")
+    print("------------------------------------------")       
+    print() 
