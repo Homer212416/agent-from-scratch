@@ -262,7 +262,11 @@ Q3: How long does load take with 100 messages? Will it scale to 10,000?
 At 100 docs: load (0.27s) > save (0.07s) — model loading is the fixed cost that dominates.
 At 10,000 docs: save (6.2s) > load (3.2s) — serialization cost now dominates and outpaces the fixed model cost.
 The crossover point matters: your bottleneck literally changes character as the store grows.
+(model-loading dominates at small scale, serialization dominates at large scale!!!)
 
 Q4: Now that persistence exists, did your framing of "working window" shift? Write a paragraph.
 Yes. Working window is like people's working memory, it is detailed but limited. With storage on disk, incompleted, taking loading-time, the memory is more like a completed human memory.
 (working memory (your ConversationMemory) is like short-term human memory — vivid, immediate, but limited and temporary. The persistent retrieval store is like long-term memory — slower to access (the embedding model has to "wake up"), but durable. )
+
+- article material: metaphors for what you've built. You've already got OS scheduling (Day 2) and L1/L2 cache (earlier). Today added human short-term/long-term memory. your system is "write-back" (saves accumulate and only flush at the end) rather than "write-through" (every write immediately persisted). 
+
