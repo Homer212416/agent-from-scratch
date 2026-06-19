@@ -27,3 +27,6 @@ wheels/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Storage
+.json

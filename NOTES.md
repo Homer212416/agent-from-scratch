@@ -212,3 +212,57 @@ A: Very fast. Much faster than LLM response.
 Q: The real question — is semantic retrieval worth the complexity for your use case? Argue both sides.
 A: Yes, it can retrieve info with vague meaning.
    No, a model is needed and naive solution can retrieve in a lot of senarios and doesn't need a model.
+(For: Semantic retrieval handles paraphrasing, synonyms, and vague references ("they", "the animal") that keyword matching completely misses. As conversations get longer and more natural, exact word overlap becomes rarer.
+Against: It adds a model dependency (download, memory footprint, inference time even if small), and it always returns something even when nothing is relevant — which can inject noise into the prompt. For small, short conversations where users tend to reuse the same words, keyword matching might be "good enough" and far simpler to debug and reason about.)
+
+## -- day 6 --
+
+### -- design --
+
+Q1: What format? JSON, SQLite, pickle, plaintext? Pick one and justify in 2-3 lines. (Hint: think about debuggability, portability, and what you'd want when something goes wrong.)
+A: JSON. JSON is very easy to manupilate in python and familiar by LLM. SQLite is also a good choice but too heavy for such a small project. Pickle is not easy to use since it does not have good structure. Plaintext doesn't have structure either.
+(JSON is also human-readable — you can open the file in a text editor and see exactly what's stored, which matters when debugging "why did my agent forget something." Pickle and SQLite require tooling to inspect; JSON doesn't.)
+
+Q2: What gets persisted? Just the retrieval store? Working window too? Summary? All three? Why?
+A: Just the retrieal store. Working window and summary are for the current session not for cross sessions.
+(One thing to think through: if only the retrieval store persists, what happens to your dog's name on a fresh session? It's in the summary, not necessarily in the retrieval store (since you only added user messages to the store, and the summary is a separate generated text). So when the user starts a new session tomorrow, the summary is gone — does the retrieval store alone capture everything important?)
+
+Q3: When does saving happen? On every message, on a timer, on shutdown, manually? Pick one. Tradeoffs: every message = safe but slow; on shutdown = fast but crash-fragile.
+A: when shutdown. Since the shutdown is soft, when the input is 'quit', it is safe to trigger saving then. On every message would be too slow. On a timer might disrupt user's process.
+(you're choosing the "fast but crash-fragile" option intentionally. That's fine; Block 3 will specifically test what happens when the process dies uncleanly (Ctrl+C) instead of a clean quit. You'll feel the consequence of this choice firsthand soon.)
+
+Q4: How do embeddings get persisted? Re-compute on load, or save the vectors too? What's the tradeoff?
+A: It's a classic time and space trade-off. I choose re-comput onload. Since we have chosen JSON, it's for storing text. If we need to store vectors, a vector DB would be needed.
+(JSON can absolutely store numbers, including nested arrays of floats. A vector like [0.123, -0.456, 0.789, ...] is just a list, and JSON handles lists natively:
+No vector database needed — that's only necessary at scale with similarity search optimizations.
+So the real tradeoff is:
+Re-compute on load: Smaller file size, but every restart costs embedding time.
+Save vectors too: Larger file size, but instant load — no re-encoding needed.)
+After reconsidering, let's try with saving vectors.
+generalized insight -- "Embeddings are the idea that meaning can be represented as geometry."
+
+Q5: What does "session" mean now? One user, one conversation, one process? If the user starts a new conversation tomorrow, what gets loaded — everything, or only the persistent layer?
+A: It means one process. When we start a session, in the backend, there is a process. If a new converstion is started, only persistent layer loaded, others are lost.
+(One session = one process = one ConversationMemory instance (working window + summary, ephemeral). 
+The SemanticRetrievalStore persists across processes/sessions via disk. 
+New session starts with empty working memory but full retrieval history.)
+
+### -- evaluation --
+
+scaling — at 10,000 documents, the model loading time stays roughly constant (it's a fixed cost), but JSON parsing and converting 10,000 embeddings back to numpy arrays will grow.
+
+Q1: What broke in the crash test? Worst-case data loss?
+The current session retrieval storage is lost, which is the worst-case.
+(accurate, but be precise: it's not the retrieval storage that's lost (that only updates on save() calls within the session anyway) — it's specifically any messages from that crashed session that hadn't been saved yet.)
+
+Q2: Did model-mismatch fail loudly? (Yes — already confirmed)
+Yes, it raises the error.
+
+Q3: How long does load take with 100 messages? Will it scale to 10,000?
+At 100 docs: load (0.27s) > save (0.07s) — model loading is the fixed cost that dominates.
+At 10,000 docs: save (6.2s) > load (3.2s) — serialization cost now dominates and outpaces the fixed model cost.
+The crossover point matters: your bottleneck literally changes character as the store grows.
+
+Q4: Now that persistence exists, did your framing of "working window" shift? Write a paragraph.
+Yes. Working window is like people's working memory, it is detailed but limited. With storage on disk, incompleted, taking loading-time, the memory is more like a completed human memory.
+(working memory (your ConversationMemory) is like short-term human memory — vivid, immediate, but limited and temporary. The persistent retrieval store is like long-term memory — slower to access (the embedding model has to "wake up"), but durable. )

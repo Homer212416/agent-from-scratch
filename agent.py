@@ -12,6 +12,8 @@ key=os.getenv("ZAI")
 
 client = ZhipuAI(api_key=key)
 
+SAVE_PATH = "semantic_store.json"
+
 def summerizer(messages:list, existing_summary:str)->str:
 
     messages_text = "\n".join(
@@ -48,12 +50,18 @@ New conversation to summarize:
 memory = ConversationMemory(max_tokens=1000,summarizer=summerizer)
 store = RetrievalStore()
 
-semantic_store = SemanticRetrievalStore()
+if os.path.exists(SAVE_PATH):
+    semantic_store = SemanticRetrievalStore.load(SAVE_PATH)
+    print(f"Loaded {len(semantic_store.documents)} documents from disk.")
+else:
+    semantic_store = SemanticRetrievalStore()
 
 while True:
     user_input = input("You: ")
     
     if user_input.lower() == "quit":
+        semantic_store.save(SAVE_PATH)
+        print(f"Saved {len(semantic_store.documents)} documents to disk.")
         break
 
     if not user_input.strip():
