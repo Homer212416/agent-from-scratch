@@ -263,6 +263,7 @@ At 100 docs: load (0.27s) > save (0.07s) — model loading is the fixed cost tha
 At 10,000 docs: save (6.2s) > load (3.2s) — serialization cost now dominates and outpaces the fixed model cost.
 The crossover point matters: your bottleneck literally changes character as the store grows.
 (model-loading dominates at small scale, serialization dominates at large scale!!!)
+(Most articles say "use a vector database for scale" without showing you when and why the simple approach breaks. You have actual numbers from a real system you built.)
 
 Q4: Now that persistence exists, did your framing of "working window" shift? Write a paragraph.
 Yes. Working window is like people's working memory, it is detailed but limited. With storage on disk, incompleted, taking loading-time, the memory is more like a completed human memory.
@@ -270,3 +271,66 @@ Yes. Working window is like people's working memory, it is detailed but limited.
 
 - article material: metaphors for what you've built. You've already got OS scheduling (Day 2) and L1/L2 cache (earlier). Today added human short-term/long-term memory. your system is "write-back" (saves accumulate and only flush at the end) rather than "write-through" (every write immediately persisted). 
 
+## -- dat 7 --
+
+### -- design --
+Q1: What should the minimal public interface of your Agent class be? Write out the method signatures.
+A: 
+agent.summarize()->:None
+agent.load_memory(path:str)->:None
+agent.dump_memory(path:str)->:None
+agent.run()->:str
+( 
+(chat) instead of separate run(), summarize(), load_memory(), dump_memory().
+Because summarization, loading, and saving are implementation details the user shouldn't need to know about or call directly.
+Loading happens automatically in __init__. Saving happens in a close() method.
+So the actual minimal interface is just:
+chat(self, user_message: str) -> str: ...
+def save(self) -> None: ...
+def close(self) -> None: ...
+)
+
+Q2: What does Agent.__init__ accept as parameters? Which have defaults, which are required?
+A: model_name:str, load_context:boolean, storage_path:str="storage.json", system_prompt:str, number_of_retrieved=3
+(
+api_key — has to be required, no sensible default exists (it's secret, per-user)
+model_name — could default to whatever you've been using
+storage_path — default ("storage.json")
+system_prompt — could default to None or a generic empty default
+number_of_retrieved (top_k) — could default to 3
+load_context (boolean) — could default to True, since "if a save file exists, load it" is the sensible behavior
+)
+
+Q3: What's the relationship between ConversationMemory and SemanticRetrievalStore inside Agent? Does Agent hold them as attributes (composition), inherit from them, or something else? Why?
+A: They compensate with each other to form the entire memory. Yes, it holds them as attributes. Agent is a memory (inheritance) is not fair, composition is more reasonable. Since agent is very different from the memory.
+
+Q4: When a user sends a message, what's the internal processing flow in Agent.chat()? List the steps: 1, 2, 3...
+A: 
+step 1: load the retrival memory 
+step 2: if context is full, summarize by doing a llm call
+step 3: form the conversation context
+step 4: call the llm to generate the reply
+(
+1. Receive user_message
+2. Retrieve relevant past context from SemanticRetrievalStore.search(user_message)
+3. Add the user message to ConversationMemory (this is also where summarization gets triggered internally if the window is full)
+4. Add the user message to SemanticRetrievalStore too (so it's searchable in future turns)
+5. Build the final prompt — combine: summary + retrieved docs + working window messages
+6. Call the LLM with that combined prompt
+7. Add the assistant's reply to ConversationMemory
+8. Return the reply to the caller
+)
+
+Q5: Should the LLM call be abstracted out? Right now it's hardcoded to ZhipuAI, but you've discussed model-agnostic design before. Do it today or not?
+A: Yes, we should do it today.
+(keep it minimal. Just wrap the ZhipuAI call in a private method — that satisfies the roadmap's anti-goal ("don't build a model abstraction layer") while still giving you a single point of change if you ever do need to switch later.)
+
+
+
+## -- materials --
+
+You now have four mental models stacked on this project:
+OS scheduling (Day 2)
+L1/L2 cache (Day 4)
+Short-term/long-term human memory (Day 6)
+Write-back vs write-through (Day 6)
