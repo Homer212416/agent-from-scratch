@@ -8,28 +8,28 @@ from typing import cast
 
 import json
 
-class RetrievalStore:
+# class RetrievalStore:
 
-    def __init__(self):
-        self.documents = []
-        self.stopwords = {"the", "a", "is", "what", "how", "do", "you", "i", "it", "my", "me"}
+#     def __init__(self):
+#         self.documents = []
+#         self.stopwords = {"the", "a", "is", "what", "how", "do", "you", "i", "it", "my", "me"}
 
-    def add(self, text: str) -> None:
-        self.documents.append(text)
+#     def add(self, text: str) -> None:
+#         self.documents.append(text)
 
-    def _score(self, query: str, document: str) -> int:
-        query_words = set(query.lower().split()) - self.stopwords
-        doc_words = set(document.lower().split()) - self.stopwords
-        return len(query_words & doc_words)
+#     def _score(self, query: str, document: str) -> int:
+#         query_words = set(query.lower().split()) - self.stopwords
+#         doc_words = set(document.lower().split()) - self.stopwords
+#         return len(query_words & doc_words)
 
-    def search(self, query: str, top_k: int = 3) -> list:
-    	# similar to KNN
-        scored = [
-            (self._score(query, doc), doc)
-            for doc in self.documents
-        ]
-        scored.sort(reverse=True)
-        return [doc for score, doc in scored[:top_k] if score > 0]
+#     def search(self, query: str, top_k: int = 3) -> list:
+#     	# similar to KNN
+#         scored = [
+#             (self._score(query, doc), doc)
+#             for doc in self.documents
+#         ]
+#         scored.sort(reverse=True)
+#         return [doc for score, doc in scored[:top_k] if score > 0]
   
 class SemanticRetrievalStore:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
@@ -38,14 +38,14 @@ class SemanticRetrievalStore:
         self.documents = []
         self.embeddings = []
 
+    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
     def add(self, text: str) -> None:
         embedding = self.model.encode(text)
         self.documents.append(text)
         self.embeddings.append(embedding)
-
-    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
+        
     def search(self, query: str, top_k: int = 3) -> list:
         if not self.documents:
             return []

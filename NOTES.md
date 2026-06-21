@@ -289,6 +289,9 @@ chat(self, user_message: str) -> str: ...
 def save(self) -> None: ...
 def close(self) -> None: ...
 )
+(用框架使用者的视角看API：用户用你的 framework 想做的事是和 agent 对话。他们不需要知道你内部有 memory、有 summarization、有 retrieval store。这些是你的工程问题，不是他们的问题。
+你还在用"我作为开发者要怎么实现"的视角思考，而不是用"用户要怎么用，数据流要怎么走"的视角。
+这是从 component-builder 到 framework-designer 的关键认知差。)
 
 Q2: What does Agent.__init__ accept as parameters? Which have defaults, which are required?
 A: model_name:str, load_context:boolean, storage_path:str="storage.json", system_prompt:str, number_of_retrieved=3
@@ -325,7 +328,60 @@ Q5: Should the LLM call be abstracted out? Right now it's hardcoded to ZhipuAI, 
 A: Yes, we should do it today.
 (keep it minimal. Just wrap the ZhipuAI call in a private method — that satisfies the roadmap's anti-goal ("don't build a model abstraction layer") while still giving you a single point of change if you ever do need to switch later.)
 
+## -- day 8 -- 
 
+### -- design -- 
+Q1: When a stranger runs your agent, what's most likely to break? List 5+ failure modes.
+A: 
+1. They don't know how to set the LLM API Key. In our case, we already have one in the .env.
+2. They don't use ZhipuAI, which we're using. Maybe a compatible API is needed.
+3. They use control + c to end the process which breaks the saving logic.
+4. In the second session, they ask about a reply in the first session, which is never stored.
+5. They haven't install the dependencies.
+6. The model they use may not understand the prompt well.
+(
+Genuinely strong catches:
+#1 (API key setup confusion) — directly addressed by today's work
+#3 (Ctrl+C breaks saving) — real, you found this yourself on Day 6
+#5 (dependencies not installed) — real first-contact friction
+A few the roadmap specifically hints at that you're missing:
+Wrong/invalid API key (different from "not set" — the key exists but is rejected by the API)
+ZhipuAI service down or network drop — what happens when the API call itself fails mid-request?
+Corrupted save file — what if agent_memory.json gets manually edited and becomes invalid JSON?
+Wrong Python version — you hit this exact problem yourself on Day 5 (torch wheel mismatch)!
+)
+
+Q2: For each failure, should it fail loud or degrade gracefully? Give your reasoning for at least a few of them.
+A:
+- API key setup confusion and Wrong/invalid API key / ZhipuAI service down or network drop should fail loudly otherwise nothing is generated.
+- Ctrl+C breaks saving, maybe we can give a warning but let the user make the decision
+- dependencies not installed and Wrong Python version. Fail loudly or it breaks.
+- Corrupted save file — what if agent_memory.json gets manually edited and becomes invalid JSON? Fall back to without long-term memory and tell the use the truth. No need to exit since the agent still works.
+- The most important, this framework is for developers rather than end users and this is why "fail loud" is correct.
+
+(recondieration: corrupted save file needs failing loudly: "Your memory file is corrupted, here's the exact path, fix it or delete it to start fresh.")
+
+Q3: In __init__, which parameters deserve sensible defaults? Which must the user provide?
+A:
+api_key must be provided by the user
+model can be with default if we stick to ZhipuAI, if we make it flexible, it's better to let the user provide
+max_tokens defaults with a heuristic value
+persist_path has defaults at the same dir
+top_k has sensible defaults
+
+(
+For the api_key, user passes nothing (Agent() or doesn't include the parameter) → api_key defaults to None → the code falls back to checking .env via os.getenv(...)
+if both fail — no explicit key passed AND no .env variable set — only then does it raise the loud error: "API key required. Either pass api_key=... or set the ZHIPU_API_KEY environment variable."
+)
+
+Q4: How does your framework communicate errors? Just raise generic Exception? Or custom error types like AgentError, MemoryError, RetrievalError?
+A: Absolutely custom error types. A few more lines of code would get a lot of convenience in debugging.
+
+(For today, keep it minimal per the anti-goals — maybe 2-3 custom types is enough, not a deep hierarchy:
+AgentError
+APIKeyError
+MemoryFileError
+)
 
 ## -- materials --
 
@@ -334,3 +390,4 @@ OS scheduling (Day 2)
 L1/L2 cache (Day 4)
 Short-term/long-term human memory (Day 6)
 Write-back vs write-through (Day 6)
+

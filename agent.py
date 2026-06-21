@@ -3,12 +3,15 @@ from zhipuai import ZhipuAI
 from memory import ConversationMemory
 from retrieval import SemanticRetrievalStore
 from typing import Optional
+import json
+import time
 
+from errors import APIKeyError, AgentError, MemoryFileError
 
 class Agent:
     def __init__(
         self,
-        api_key: str,
+        api_key: Optional[str] = None,
         model: str = "glm-4-flash",
         max_tokens: int = 1000,
         persist_path: Optional[str] = "semantic_store.json",
@@ -18,6 +21,15 @@ class Agent:
         self.top_k = top_k
         self.persist_path = persist_path
 
+        if api_key is None:
+            api_key = os.getenv("ZAI")
+
+        if not api_key:
+            raise APIKeyError(
+                "API key required. Either pass api_key=... or set "
+                "the ZAI environment variable in your .env file."
+            )
+
         self.client = ZhipuAI(api_key=api_key)
 
         self.memory = ConversationMemory(
@@ -26,8 +38,17 @@ class Agent:
         )
 
         if persist_path and os.path.exists(persist_path):
-            self.retrieval = SemanticRetrievalStore.load(persist_path)
+            try:
+                # already have a store file
+                self.retrieval = SemanticRetrievalStore.load(persist_path)
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                raise MemoryFileError(
+                    f"Memory file at '{persist_path}' is corrupted or incompatible: {e}. "
+                    f"Delete it to start fresh, or restore from a backup."
+                )
+
         else:
+            # a brand new store
             self.retrieval = SemanticRetrievalStore()
 
 
@@ -64,12 +85,22 @@ class Agent:
         return response.choices[0].message.content
 
 
-    def _call_llm(self, messages: list) -> str:
+    def _call_llm(self, messages: list, max_retries: int = 1) -> str:
+        last_error = None
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages
+                )
+            except Exception as e:
+                last_error = e
+                time.sleep(1)
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages
+        raise AgentError(
+            f"LLM call failed after {max_retries + 1} attempts: {last_error}"
         )
+
         return response.choices[0].message.content
 
 
