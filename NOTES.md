@@ -383,6 +383,42 @@ APIKeyError
 MemoryFileError
 )
 
+### -- evaluation -- 
+
+1. cd /tmp
+git clone <your-repo-url> test-fresh
+cd test-fresh
+git checkout feat/memory-v0
+
+clone the repo fresh 
+then try to run it
+
+➜  test-fresh git:(feat/memory-v0) uv run main.py
+Using CPython 3.11.15
+Creating virtual environment at: .venv
+Installed 66 packages in 4.51s
+Traceback (most recent call last):
+  File "/private/tmp/test-fresh/main.py", line 22, in <module>
+    main()
+  File "/private/tmp/test-fresh/main.py", line 7, in main
+    agent = Agent(api_key=os.getenv("ZAI"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/test-fresh/agent.py", line 28, in __init__
+    raise APIKeyError(
+errors.APIKeyError: API key required. Either pass api_key=... or set the ZAI environment variable in your .env file.
+
+Finding: Dependencies installed silently and automatically via uv run — no manual uv add needed by the stranger. 
+
+2. after setting up api key
+
+➜  test-fresh git:(feat/memory-v0) uv run main.py      
+Agent ready. Type 'quit' to exit.
+Hi, my name is Homer.
+
+errors.AgentError: LLM call failed after 2 attempts: None
+
+
+
 ## -- materials --
 
 You now have four mental models stacked on this project:

@@ -97,9 +97,9 @@ class Agent:
                 last_error = e
                 time.sleep(1)
 
-        raise AgentError(
-            f"LLM call failed after {max_retries + 1} attempts: {last_error}"
-        )
+                raise AgentError(
+                    f"LLM call failed after {max_retries + 1} attempts: {last_error}"
+                )
 
         return response.choices[0].message.content
 
