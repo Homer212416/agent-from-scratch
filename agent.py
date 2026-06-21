@@ -93,15 +93,14 @@ class Agent:
                     model=self.model,
                     messages=messages
                 )
+                return response.choices[0].message.content
             except Exception as e:
                 last_error = e
                 time.sleep(1)
-
-                raise AgentError(
-                    f"LLM call failed after {max_retries + 1} attempts: {last_error}"
-                )
-
-        return response.choices[0].message.content
+                if (attempt + 1 > max_retries):
+                    raise AgentError(
+                        f"LLM call failed after {max_retries + 1} attempts: {last_error}"
+                    )
 
 
     def _build_context(self, retrieved_docs: list) -> list:
