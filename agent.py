@@ -86,7 +86,7 @@ class Agent:
 
 
     def _call_llm(self, messages: list, max_retries: int = 1) -> str:
-        last_error = None
+
         for attempt in range(max_retries + 1):
             try:
                 response = self.client.chat.completions.create(
@@ -95,11 +95,11 @@ class Agent:
                 )
                 return response.choices[0].message.content
             except Exception as e:
-                last_error = e
+                
                 time.sleep(1)
                 if (attempt + 1 > max_retries):
                     raise AgentError(
-                        f"LLM call failed after {max_retries + 1} attempts: {last_error}"
+                        f"LLM call failed after {max_retries + 1} attempts: {e}"
                     )
 
 
