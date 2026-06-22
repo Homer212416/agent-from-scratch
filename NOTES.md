@@ -417,7 +417,25 @@ Hi, my name is Homer.
 
 errors.AgentError: LLM call failed after 2 attempts: None
 
+3. should auth errors skip retry?
+No. We don't know if it is an auth failure or a network problem until it happens. Retry is worth.
 
+## -- day 9 --
+
+Q1: What's the one-sentence pitch? Not "an agent framework" — what does yours uniquely offer?
+A: RAG? Long/short memory? Slinding Window? Those fuzzy concepts you may hear a lot but have no ideas, once you start to build from scratch, these are very simple stuff.
+
+(
+A strong pitch usually answers: what is this, specifically, and what makes it different? Try compressing your idea into something closer to:
+
+"An agent memory framework built from scratch, layer by layer — sliding window, summarization, retrieval, persistence — so you feel exactly why each one exists instead of just importing it."
+
+Or shorter:
+
+"A from-scratch agent memory framework designed to make RAG, summarization, and retrieval feel obvious instead of magical."
+)
+
+core idea: demystification
 
 ## -- materials --
 
