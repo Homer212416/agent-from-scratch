@@ -18,6 +18,19 @@ uv run main.py
 
 That's it.
 
+## Usage
+
+How to use the repo as a library?
+
+```python
+from agent import Agent
+
+agent = Agent(api_key="your-key")
+reply = agent.chat("Hello, I'm Homer.")
+print(reply)
+agent.close()  # saves persistent memory
+```
+
 ## Architecture
 
 The agent is composed of two independent memory components: a bounded conversation window with automatic summarization, and a persistent semantic retrieval store. The `Agent` class orchestrates both — neither component knows the other exists.
