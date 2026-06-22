@@ -12,7 +12,7 @@ Most agent frameworks hand you a `Memory` class. This project rebuilds memory fr
 git clone https://github.com/Homer212416/agent-from-scratch
 cd agent-from-scratch
 cp .env.example .env  
-add your API key into .env
+# then add your API key into .env
 uv run main.py
 ```
 
