@@ -437,6 +437,36 @@ Or shorter:
 
 core idea: demystification
 
+Q2: What goes in the README, and what gets deferred to the article? The deep "why" lives in the Medium piece — the README is the entry point.
+
+A: 
+In the README:
+- How to use the framework. clone the repo, add api key to .env, install uv, uv run main.py
+- Explain the architecture
+- Explain the scope of the repo
+
+B: 
+- Explain the architecture
+- Explain the key decisions in the process
+- Explain the advantages and disadvantages
+- Explain where to modify to have different behaviors
+
+(
+One refinement worth noting: "Explain the architecture" appears in both your README list and your article list, which is fine, but the depth should differ sharply.
+README architecture section: just enough to show "I have a real, coherent structure" — a short paragraph plus maybe a simple diagram, like the roadmap's ASCII box example. Just naming the four layers and how they connect.
+Article architecture section: this is where the OS-scheduling analogy, the L1/L2 cache metaphor, the human short-term/long-term memory comparison, the "bottleneck crossover" finding from Day 6 — all of that depth lives there, with the actual reasoning and tradeoffs you debated across 9 days.
+)
+
+Q3: Should the README include the OS scheduling / L1-L2 cache / write-back analogies you developed? Or save them entirely for the article?
+A: No. These are for the article.
+
+Q4: What's the honest scope claim? Don't oversell. What's the accurate, credible way to describe what this project actually is and isn't?
+A:  it's not LangChain, not production-scale, not benchmarked, single-agent only, JSON-based not a vector DB ... 
+it's mainly for understanding what an agent is and the mechanisms.
+
+("A from-scratch agent memory framework built to expose how memory systems actually work — not a production-ready replacement for LangChain or CrewAI. It uses JSON persistence (not a vector DB), supports a single agent only, and hasn't been benchmarked or tested at scale (10k+ documents).")
+
+
 ## -- materials --
 
 You now have four mental models stacked on this project:

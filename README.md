@@ -8,13 +8,13 @@ Most agent frameworks hand you a `Memory` class. This project rebuilds memory fr
 
 ## Quick Start
 
-\```bash
+```bash
 git clone https://github.com/Homer212416/agent-from-scratch
 cd agent-from-scratch
 cp .env.example .env  
 add your API key into .env
 uv run main.py
-\```
+```
 
 That's it.
 
@@ -22,7 +22,7 @@ That's it.
 
 The agent is composed of two independent memory components: a bounded conversation window with automatic summarization, and a persistent semantic retrieval store. The `Agent` class orchestrates both — neither component knows the other exists.
 
-\```
+```
 ┌─────────────────────────────────────────────────┐
 │                     Agent                       │
 ├─────────────────────────────────────────────────┤
@@ -30,7 +30,7 @@ The agent is composed of two independent memory components: a bounded conversati
 │  ├─ working window           ├─ embeddings      │
 │  └─ summarization (on full)  └─ JSON persistence│
 └─────────────────────────────────────────────────┘
-\```
+```
 
 On each message: relevant past context is retrieved, the message is added to both the working window and the retrieval store, the full prompt is assembled (summary + retrieved docs + recent messages), and the LLM is called.
 
