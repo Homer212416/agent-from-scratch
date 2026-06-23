@@ -19,8 +19,8 @@ class ConversationMemory:
             self._compress()
 
     def _compress(self) -> None:
-        print("! The agent will compress its memory.")
-        # Keep the last 2 messages (1 pairs), summarize the rest
+        
+        # Drop pairs not singles — orphan assistant replies confuse the model
         to_summarize = self.messages[:-2]
         self.messages = self.messages[-2:]
 
@@ -34,8 +34,6 @@ class ConversationMemory:
             new_summary = f"[Summary of {len(to_summarize)} messages]"
 
         self.summary = new_summary
-
-        print(f"! [Full Summary]: {self.summary}\n")
 
     def get_context(self) -> list:
         result = []

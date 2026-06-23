@@ -466,7 +466,6 @@ it's mainly for understanding what an agent is and the mechanisms.
 
 ("A from-scratch agent memory framework built to expose how memory systems actually work — not a production-ready replacement for LangChain or CrewAI. It uses JSON persistence (not a vector DB), supports a single agent only, and hasn't been benchmarked or tested at scale (10k+ documents).")
 
-
 ## -- materials --
 
 You now have four mental models stacked on this project:
@@ -474,4 +473,3 @@ OS scheduling (Day 2)
 L1/L2 cache (Day 4)
 Short-term/long-term human memory (Day 6)
 Write-back vs write-through (Day 6)
-

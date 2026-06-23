@@ -4,7 +4,7 @@ from agent import Agent
 
 def main():
     load_dotenv()
-    agent = Agent(api_key=os.getenv("ZAI"))
+    agent = Agent()
 
     print("Agent ready. Type 'quit' to exit.")
     while True:
@@ -20,5 +20,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    

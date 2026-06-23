@@ -1,35 +1,8 @@
-import os
-os.environ['HF_HUB_DISABLE_EXPERIMENTAL_WARNING'] = '1'
-os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '0'
-
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from typing import cast
 
 import json
-
-# class RetrievalStore:
-
-#     def __init__(self):
-#         self.documents = []
-#         self.stopwords = {"the", "a", "is", "what", "how", "do", "you", "i", "it", "my", "me"}
-
-#     def add(self, text: str) -> None:
-#         self.documents.append(text)
-
-#     def _score(self, query: str, document: str) -> int:
-#         query_words = set(query.lower().split()) - self.stopwords
-#         doc_words = set(document.lower().split()) - self.stopwords
-#         return len(query_words & doc_words)
-
-#     def search(self, query: str, top_k: int = 3) -> list:
-#     	# similar to KNN
-#         scored = [
-#             (self._score(query, doc), doc)
-#             for doc in self.documents
-#         ]
-#         scored.sort(reverse=True)
-#         return [doc for score, doc in scored[:top_k] if score > 0]
   
 class SemanticRetrievalStore:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
@@ -57,11 +30,10 @@ class SemanticRetrievalStore:
             for doc_embedding, doc in zip(self.embeddings, self.documents)
         ]
 
-        all_scored_docs.sort(reverse=True) # the higher the score, the lower the similarity
+        all_scored_docs.sort(reverse=True) # descending order
 
         return [doc for _, doc in all_scored_docs[:top_k]]
 
-# ===========================
     def save(self, path: str) -> None:
         data = {
             "model_name": self.model_name,
@@ -87,7 +59,6 @@ class SemanticRetrievalStore:
         instance.embeddings = [np.array(emb) for emb in data["embeddings"]]
         return instance
 
-# ===========================
 
 if __name__ == "__main__":
     store = SemanticRetrievalStore()

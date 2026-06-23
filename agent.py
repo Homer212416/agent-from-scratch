@@ -9,6 +9,7 @@ import time
 from errors import APIKeyError, AgentError, MemoryFileError
 
 class Agent:
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -17,6 +18,10 @@ class Agent:
         persist_path: Optional[str] = "semantic_store.json",
         top_k: int = 3,
     ):
+        """Create an agent. Falls back to the ZAI environment variable if
+        api_key is not provided. Loads existing memory from persist_path
+        if it exists."""
+    
         self.model = model
         self.top_k = top_k
         self.persist_path = persist_path
@@ -53,6 +58,8 @@ class Agent:
 
 
     def _summarize(self, messages: list, existing_summary: str) -> str:
+        """Compress a batch of messages into an updated summary. Called
+        automatically by ConversationMemory when the working window fills."""
         messages_text = "\n".join(
             f"{msg['role']}: {msg['content']}" for msg in messages
         )
@@ -86,7 +93,8 @@ class Agent:
 
 
     def _call_llm(self, messages: list, max_retries: int = 1) -> str:
-
+        """Call the LLM with one retry on failure. Raises AgentError if
+        all attempts fail."""
         for attempt in range(max_retries + 1):
             try:
                 response = self.client.chat.completions.create(
@@ -104,7 +112,7 @@ class Agent:
 
 
     def _build_context(self, retrieved_docs: list) -> list:
-
+        """Assemble the final prompt: summary + retrieved docs + working window."""
         context = self.memory.get_context()
         if retrieved_docs:
             context.insert(1, {
@@ -116,35 +124,35 @@ class Agent:
 
 
     def chat(self, user_message: str) -> str:
+
+        """Send a message, get a reply. Updates memory and retrieval store,
+        and may trigger summarization if the window is full."""
+
+        # Search before adding — otherwise the current message would match itself
+        # with perfect similarity and crowd out genuinely relevant history.
         
-        # 1. retrieve relevant past context
         retrieved_docs = self.retrieval.search(user_message, top_k=self.top_k)
 
-        # 2. add user message to memory (may trigger summarization internally)
         self.memory.add_message("user", user_message)
 
-        # 3. add user message to retrieval store
         self.retrieval.add(user_message)
 
-        # 4. build the full prompt
         context = self._build_context(retrieved_docs)
 
-        # 5. call the LLM
         reply = self._call_llm(context)
 
-        # 6. update memory with the reply
         self.memory.add_message("assistant", reply)
 
-        # 7. return the reply
         return reply
 
 
     def save(self) -> None:
+        """Persist the retrieval store to disk."""
         if self.persist_path:
             self.retrieval.save(self.persist_path)
 
-
     def close(self) -> None:
+        """Save and release resources. Call this when done with the agent."""
         self.save()
 
 
