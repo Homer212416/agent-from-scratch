@@ -466,10 +466,28 @@ it's mainly for understanding what an agent is and the mechanisms.
 
 ("A from-scratch agent memory framework built to expose how memory systems actually work — not a production-ready replacement for LangChain or CrewAI. It uses JSON persistence (not a vector DB), supports a single agent only, and hasn't been benchmarked or tested at scale (10k+ documents).")
 
+## -- day 10 --
+
+(Day 10 done — and it was a genuinely different kind of work than the previous nine days. No new capability, just making the existing one honest about itself.
+
+A few things worth naming: the search-before-add ordering in chat() turned out to have a real, non-obvious reason behind it — you traced through it yourself and found that adding the message first would make it match itself with perfect similarity, crowding out the actual history you wanted. That's now a comment that will save a future reader (possibly future-you) from re-deriving the same confusion.
+
+You also picked up a real CS distinction today that had nothing to do with the roadmap directly — the Java-vs-Python constructor inheritance question, traced all the way down to "different names vs same name" as the actual mechanical root. That kind of cross-language reasoning is worth remembering; it's the same instinct that made the OS-scheduling and L1/L2-cache analogies land well earlier in this project.
+
+And you made a few real editorial calls today, not just cleanup — keeping the "why" comment on pair-dropping after I pushed back, but also legitimately overriding a suggestion (leaving msg/message naming inconsistent) when you judged it wasn't worth the churn. Both are good instincts: know when a principle matters enough to fight for, and know when a stylistic nit isn't worth your time.
+
+Ten days in, you have a clean, documented, stranger-tested framework, a roadmap-mentor skill that came out of this process as a side artifact, and an article_draft.md with the raw material gathered. Code work is done — next time you sit down, it's writing mode.)
+
 ## -- materials --
 
-You now have four mental models stacked on this project:
-OS scheduling (Day 2)
+The demystification framing (Day 9)
+OS scheduling analogy — FIFO eviction vs priority (Day 2)
 L1/L2 cache (Day 4)
-Short-term/long-term human memory (Day 6)
+Human short-term/long-term memory analogy (Day 6)
+The "no I-don't-know option" finding — semantic retrieval always forces a top-k match (Day 5)
+The save/load bottleneck crossover — model-loading cost vs serialization cost (Day 6)
 Write-back vs write-through (Day 6)
+The "argue both sides" reasoning on semantic vs keyword retrieval (Day 5)
+Composition vs inheritance reasoning (Day 7)
+"Framework for developers, not end users" — fail loud vs fail soft (Day 8)
+The unreachable return / double-API-call bug story (Day 8's live debugging)
