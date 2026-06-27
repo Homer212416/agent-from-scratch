@@ -5,34 +5,39 @@ from typing import cast
 import json
   
 class SemanticRetrievalStore:
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
         self.documents = []
-        self.embeddings = []
+        self.normalized_embeddings = []
 
-    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    def _normalize(self, embedding:np.ndarray):
+        return embedding / np.linalg.norm(embedding)
+
 
     def add(self, text: str) -> None:
-        embedding = self.model.encode(text)
         self.documents.append(text)
-        self.embeddings.append(embedding)
+        embedding = self.model.encode(text)
+        normalized_embedding = self._normalize(cast(np.ndarray,embedding))
+        self.normalized_embeddings.append(normalized_embedding)
         
     def search(self, query: str, top_k: int = 3) -> list:
         if not self.documents:
             return []
         
+        # the query vector
         query_embedding = self.model.encode(query)
+        # normalize the query vector
+        normalized_query_embedding = self._normalize(cast(np.ndarray,query_embedding))
+        
+        nourmalized_doc_embeddings = np.array(self.normalized_embeddings)
 
-        all_scored_docs = [
-            (self._cosine_similarity(cast(np.ndarray,query_embedding), doc_embedding), doc)
-            for doc_embedding, doc in zip(self.embeddings, self.documents)
-        ]
-
-        all_scored_docs.sort(reverse=True) # descending order
-
-        return [doc for _, doc in all_scored_docs[:top_k]]
+        scores = nourmalized_doc_embeddings @ normalized_query_embedding # (n,m) @ (m,) = (n,)
+        
+        top_indices = np.argsort(scores)[::-1][:top_k] 
+        
+        return [self.documents[i] for i in top_indices]
 
     def save(self, path: str) -> None:
         data = {
@@ -71,5 +76,3 @@ if __name__ == "__main__":
     results = store.search("What's my pet called?", top_k=2)
     print(f"Search took: {time.time() - start:.4f}s")
     print(results)
-
-
