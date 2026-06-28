@@ -51,6 +51,11 @@ Just gathering. Add anything missing, cut anything that's not actually yours.)
 
 ## Day 4 — Naive keyword retrieval
 
+- Design decision: the retrieval store holds only *user* messages, not assistant replies.
+  Reasoning — user messages carry the dense, important facts (names, tasks, preferences); the
+  model can always regenerate its own side of the conversation from context, but it can't
+  regenerate a fact the user only said once. Storing everything would bloat the store with
+  content that's reconstructable anyway.
 - Score by shared word count between query and document (set intersection on lowercased,
   split words, minus a tiny stopword list). Same shape as KNN, different metric: "top-k by
   overlap" instead of "top-k by distance."
