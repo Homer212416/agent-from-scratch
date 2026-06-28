@@ -138,11 +138,11 @@ Q5: If retrieval pulls back a message from 50 turns ago — but that message has
 A: Store the original after eviction. We do eviction because the context window is very limit, but the vector DB can be much bigger, it can store long term memory.
 
 - Observation:
-"dog" and "pet" have zero word overlap so score = 0, nothing retrieved. The retrieval store has "my dog's name is Pickle" but the query "do I have a pet" shares no meaningful words with it.
+"dog" and "pet" have zero word overlap so score = 0, nothing retrieved. The retrieval store has "my dog's name is Puppy" but the query "do I have a pet" shares no meaningful words with it.
 This is precisely why semantic embeddings exist. In vector space:
 
 "dog" and "pet" are close neighbors
-"Pickle" and "dog name" are related concepts
+"Puppy" and "dog name" are related concepts
 
 Keyword matching only sees surface form. Embeddings capture meaning.
 
@@ -219,9 +219,9 @@ Against: It adds a model dependency (download, memory footprint, inference time 
 
 ### -- design --
 
-Q1: What format? JSON, SQLite, pickle, plaintext? Pick one and justify in 2-3 lines. (Hint: think about debuggability, portability, and what you'd want when something goes wrong.)
-A: JSON. JSON is very easy to manupilate in python and familiar by LLM. SQLite is also a good choice but too heavy for such a small project. Pickle is not easy to use since it does not have good structure. Plaintext doesn't have structure either.
-(JSON is also human-readable — you can open the file in a text editor and see exactly what's stored, which matters when debugging "why did my agent forget something." Pickle and SQLite require tooling to inspect; JSON doesn't.)
+Q1: What format? JSON, SQLite, Puppy, plaintext? Pick one and justify in 2-3 lines. (Hint: think about debuggability, portability, and what you'd want when something goes wrong.)
+A: JSON. JSON is very easy to manupilate in python and familiar by LLM. SQLite is also a good choice but too heavy for such a small project. Puppy is not easy to use since it does not have good structure. Plaintext doesn't have structure either.
+(JSON is also human-readable — you can open the file in a text editor and see exactly what's stored, which matters when debugging "why did my agent forget something." Puppy and SQLite require tooling to inspect; JSON doesn't.)
 
 Q2: What gets persisted? Just the retrieval store? Working window too? Summary? All three? Why?
 A: Just the retrieal store. Working window and summary are for the current session not for cross sessions.
@@ -478,6 +478,35 @@ And you made a few real editorial calls today, not just cleanup — keeping the 
 
 Ten days in, you have a clean, documented, stranger-tested framework, a roadmap-mentor skill that came out of this process as a side artifact, and an article_draft.md with the raw material gathered. Code work is done — next time you sit down, it's writing mode.)
 
+## -- day 11 --
+
+Q1: Which 3 nuggets feel most alive when you read them? Not the most impressive ones — the ones that make you want to say more about them. The ones you can hear yourself explaining at a whiteboard.
+
+A: I think the Day1&Day2, it tells that memory can be as simple as a list of dicts. And Summarization is special, it's kind of LLM native, it uses the ability of LLM, makes it different from other classical programs. The third is semantic retrieval, this is what makes the agent memory realy like a real one, when it can tell me pet's name but I told what the dog called in the last session.
+
+("Every other layer manages memory using ordinary code — slicing, hashing, vector math. Summarization is different: it asks the LLM to compress its own conversation, using the same kind of intelligence it's trying to remember things about.")
+
+Q2: Which one analogy is your favorite — OS scheduling, L1/L2 cache, write-back vs write-through, short-term/long-term memory, or "no I-don't-know option"? Don't justify it, just pick the one you'd most want to lead with.
+
+A: Human short-term and long-term memory. 
+
+Q3: Who is the reader? Pick one specifically:
+
+(A) A junior/mid engineer who's used LangChain but never built memory from scratch
+
+(B) A senior engineer evaluating you for a role, wanting to see system-level tradeoff reasoning
+
+(C) A hiring manager / recruiter who isn't deeply technical
+
+(D) A fellow learner at a similar stage who'd clone the repo to learn
+
+A: (D)
+
+Opening A — Personal hook (the pet/dog moment)
+On Day 4 of building an agent memory system from scratch, I told my own agent that my dog's name was Puppy. Ten turns later, I asked what my pet was called. Nothing. Zero retrieval, total silence — not because the agent forgot, but because "pet" and "dog" share zero letters in common, and that was the only thing my retrieval system knew how to check. That one broken moment taught me more about why embeddings exist than any explainer I'd read. This is the story of building an agent's memory one layer at a time, over ten days, mostly so I could feel exactly where each layer breaks before reaching for the next one. If you've used LangChain's memory classes and wondered what's actually inside them, this is what's inside — built by hand, bugs included.
+
+
+
 ## -- materials --
 
 The demystification framing (Day 9)
@@ -491,3 +520,4 @@ The "argue both sides" reasoning on semantic vs keyword retrieval (Day 5)
 Composition vs inheritance reasoning (Day 7)
 "Framework for developers, not end users" — fail loud vs fail soft (Day 8)
 The unreachable return / double-API-call bug story (Day 8's live debugging)
+
