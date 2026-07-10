@@ -480,32 +480,31 @@ Ten days in, you have a clean, documented, stranger-tested framework, a roadmap-
 
 ## -- day 11 --
 
-Q1: Which 3 nuggets feel most alive when you read them? Not the most impressive ones — the ones that make you want to say more about them. The ones you can hear yourself explaining at a whiteboard.
+- Q1: Which 3 nuggets feel most alive when you read them? Not the most impressive ones — the ones that make you want to say more about them. The ones you can hear yourself explaining at a whiteboard.
 
 A: I think the Day1&Day2, it tells that memory can be as simple as a list of dicts. And Summarization is special, it's kind of LLM native, it uses the ability of LLM, makes it different from other classical programs. The third is semantic retrieval, this is what makes the agent memory realy like a real one, when it can tell me pet's name but I told what the dog called in the last session.
 
 ("Every other layer manages memory using ordinary code — slicing, hashing, vector math. Summarization is different: it asks the LLM to compress its own conversation, using the same kind of intelligence it's trying to remember things about.")
 
-Q2: Which one analogy is your favorite — OS scheduling, L1/L2 cache, write-back vs write-through, short-term/long-term memory, or "no I-don't-know option"? Don't justify it, just pick the one you'd most want to lead with.
+- Q2: Which one analogy is your favorite — OS scheduling, L1/L2 cache, write-back vs write-through, short-term/long-term memory, or "no I-don't-know option"? Don't justify it, just pick the one you'd most want to lead with.
 
 A: Human short-term and long-term memory. 
 
-Q3: Who is the reader? Pick one specifically:
+- Q3: Who is the reader? Pick one specifically:
 
-(A) A junior/mid engineer who's used LangChain but never built memory from scratch
+A: A fellow learner at a similar stage who'd clone the repo to learn
 
-(B) A senior engineer evaluating you for a role, wanting to see system-level tradeoff reasoning
+## -- day 12 --
+polish list:
+- The words or style, should be straitforward and reader-friendly.
+- The connection can be more natural, "the solution is " is over used.
 
-(C) A hiring manager / recruiter who isn't deeply technical
-
-(D) A fellow learner at a similar stage who'd clone the repo to learn
-
-A: (D)
-
-Opening A — Personal hook (the pet/dog moment)
-On Day 4 of building an agent memory system from scratch, I told my own agent that my dog's name was Puppy. Ten turns later, I asked what my pet was called. Nothing. Zero retrieval, total silence — not because the agent forgot, but because "pet" and "dog" share zero letters in common, and that was the only thing my retrieval system knew how to check. That one broken moment taught me more about why embeddings exist than any explainer I'd read. This is the story of building an agent's memory one layer at a time, over ten days, mostly so I could feel exactly where each layer breaks before reaching for the next one. If you've used LangChain's memory classes and wondered what's actually inside them, this is what's inside — built by hand, bugs included.
-
-
+Section 8 needs expanding — composition-over-inheritance point is missing, "fail loud" reasoning is compressed to one sentence
+Section 1 needs a promise sentence at the end
+Section 2 needs the one-line bio
+Section 6 needs a decision on the GIL finding — in or out, mark clearly
+"Now I'm released" in section 10 — fix to "relieved" or reword
+Section 7/6 ordering swap needs to be reflected in the outline file
 
 ## -- materials --
 
@@ -520,4 +519,5 @@ The "argue both sides" reasoning on semantic vs keyword retrieval (Day 5)
 Composition vs inheritance reasoning (Day 7)
 "Framework for developers, not end users" — fail loud vs fail soft (Day 8)
 The unreachable return / double-API-call bug story (Day 8's live debugging)
+
 

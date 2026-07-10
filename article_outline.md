@@ -47,17 +47,18 @@ them yourself instead of importing them."
   no concept yet of "this matters more."
 
 ### 5. Layer 3: summarization (~300 words)
-- The design decisions, briefly: trigger at a high-watermark (~80% full, not 100%); summarize
-  in batches, not one message at a time, so the model has enough signal to judge importance.
-- The real bug as a concrete moment: the summary was being generated correctly the whole time —
-  it just wasn't being sent to the model, because of one wrong variable name in a function call.
-  Looked exactly like "forgetting." Wasn't.
-- The "alive" nugget from Q1: summarization is different in *kind* from the other layers, not
+- The "alive" nugget: summarization is different in kind from the other layers, not
   just degree. Sliding windows and retrieval are math — slicing, hashing, vector distance.
   Summarization is the one layer where the system has to think to remember; it calls on the
   very same kind of intelligence it's trying to manage, to manage it.
-- Pain point: summary-of-summary degradation. Facts survive a few compression cycles, then
-  start to erode.
+- The design decisions, briefly: trigger at a high-watermark (~80% full, not 100%);
+  summarize in batches, not one message at a time, so the model has enough signal to
+  judge importance.
+- The real bug as a concrete moment: the summary was being generated correctly the whole
+  time — it just wasn't being sent to the model, because of one wrong variable name in a
+  function call. Looked exactly like "forgetting." Wasn't.
+- Pain point: summary-of-summary degradation. Facts survive a few compression cycles,
+  then start to erode.
 
 ### 6. Layer 4: semantic retrieval (~400 words — this is now the heaviest section, that's fine)
 - Open with the full story, told in place, now that the reader has context for why it matters:
